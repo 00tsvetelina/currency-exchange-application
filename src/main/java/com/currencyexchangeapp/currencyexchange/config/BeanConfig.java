@@ -1,15 +1,13 @@
-package com.currencyexchangeapp.currencyexchange.service;
+package com.currencyexchangeapp.currencyexchange.config;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 
 @Configuration
-public class HttpClientConfig {
+public class BeanConfig {
 
 //    @Bean
 //    HttpRequest getRequest(String base, String symbol) throws URISyntaxException {
@@ -23,6 +21,11 @@ public class HttpClientConfig {
     @Bean
     HttpClient httpClient() {
         return HttpClient.newHttpClient();
+    }
+
+    @Bean
+    ModelMapper modelMapper() {
+        return new ModelMapper();
     }
 }
 
