@@ -1,4 +1,5 @@
 package com.currencyexchangeapp.currencyexchange.service;
+import com.currencyexchangeapp.currencyexchange.error.OperationFailedException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -32,12 +33,11 @@ public class ExchangeService {
             return currencyMap.get(symbol);
         } catch (IOException | InterruptedException ex) {
             log.error("Could not get exchange rate", ex);
+            throw new OperationFailedException("Could not get exchange rate with entered values.");
         }
-
-        return null;
     }
 
-    private HttpRequest buildExchangeRateRequest(String base, String symbol) {
+    HttpRequest buildExchangeRateRequest(String base, String symbol) {
         try {
             URIBuilder builder = new URIBuilder("https://api.freecurrencyapi.com/v1/latest");
             builder.addParameter("apikey", System.getenv("API_KEY"));
@@ -50,8 +50,7 @@ public class ExchangeService {
                     .build();
         } catch (URISyntaxException ex) {
             log.error("Could not build URI", ex);
+            throw new OperationFailedException("Could not build request with entered credentials.");
         }
-
-        return null;
     }
 }

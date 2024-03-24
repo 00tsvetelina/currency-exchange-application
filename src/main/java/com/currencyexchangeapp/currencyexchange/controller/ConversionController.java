@@ -29,7 +29,6 @@ public class ConversionController {
         Conversion conversion = conversionService.convertCurrency(base, symbol, amount);
         ConversionDTO conversionDTO = modelMapper.map(conversion, ConversionDTO.class);
 
-
         return new ResponseEntity<>(conversionDTO, HttpStatus.CREATED);
     }
 
