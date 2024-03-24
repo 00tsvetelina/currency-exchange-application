@@ -13,8 +13,6 @@ public class ExchangeController {
 
     private final ExchangeService exchangeService;
 
-    // GET
-    // add getExchangeRate method
     @GetMapping("/exchangeRate")
     public ResponseEntity<Double> getExchangeRate(@RequestParam String base, String symbol) {
         return ResponseEntity.ok(exchangeService.getExchangeRate(base, symbol));

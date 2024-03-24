@@ -10,6 +10,5 @@ import lombok.Setter;
 public class ConversionDTO {
     private Integer id;
     private Double rate;
-
     private Double amount;
 }

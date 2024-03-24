@@ -4,14 +4,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.lang.reflect.AnnotatedArrayType;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class Conversion {
 
     @Id
@@ -26,7 +24,7 @@ public class Conversion {
     private String symbol;
 
     @Column(name = "date")
-    private LocalDateTime date;
+    private LocalDate date;
 
     @Column(name = "rate")
     private Double rate;
@@ -37,7 +35,7 @@ public class Conversion {
     public Conversion(String base, String symbol, Double rate, Double amount) {
         this.base = base;
         this.symbol = symbol;
-        this.date = LocalDateTime.now();
+        this.date = LocalDate.now();
         this.rate = rate;
         this.amount = amount;
     }

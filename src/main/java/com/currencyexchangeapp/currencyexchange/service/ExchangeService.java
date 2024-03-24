@@ -1,23 +1,17 @@
 package com.currencyexchangeapp.currencyexchange.service;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
-import java.util.logging.Logger;
+
 
 @Service
 @AllArgsConstructor
@@ -26,8 +20,6 @@ public class ExchangeService {
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    // GET
-    // add getExchangeRate method
 
     public Double getExchangeRate(String base, String symbol) {
         try {
