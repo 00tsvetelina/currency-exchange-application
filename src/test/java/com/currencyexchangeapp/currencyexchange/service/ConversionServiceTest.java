@@ -17,10 +17,8 @@ class ConversionServiceTest {
 
     @Mock
     private ConversionRepository conversionRepositoryMock;
-
     @Mock
     private ExchangeService exchangeServiceMock;
-
     private ConversionService conversionService;
 
     @BeforeEach

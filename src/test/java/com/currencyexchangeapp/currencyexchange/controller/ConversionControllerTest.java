@@ -19,79 +19,67 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ConversionControllerTest {
 
     @Mock
     private ConversionService conversionService;
-
     @Mock
     private ModelMapper modelMapper;
-
     @InjectMocks
     private ConversionController conversionController;
 
-    @Mock
-    private ConversionRepository conversionRepository; // Add mock repository
-
     @Test
     public void testConvertCurrency() {
-        // Mock conversion service response
         Conversion conversion = new Conversion();
         conversion.setId(1);
         conversion.setRate(1.0);
         conversion.setAmount(10.0);
         when(conversionService.convertCurrency("USD", "EUR", 10.0)).thenReturn(conversion);
 
-        // Mock model mapper response
         ConversionDTO conversionDTO = new ConversionDTO();
         conversionDTO.setId(1);
         conversionDTO.setRate(1.0);
         conversionDTO.setAmount(10.0);
         when(modelMapper.map(conversion, ConversionDTO.class)).thenReturn(conversionDTO);
 
-        // Call controller method
         ResponseEntity<ConversionDTO> response = conversionController.convertCurrency("USD", "EUR", 10.0);
 
-        // Verify the response
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(conversionDTO, response.getBody());
     }
 
     @Test
-    public void testGetConversionHistory() {
-        // Mock conversion repository response
+    void getConversionHistoryTest() {
         LocalDate date = LocalDate.now();
-        Conversion conversion = new Conversion();
-        conversion.setId(1);
-        conversion.setRate(1.0);
-        conversion.setAmount(10.0);
-        List<Conversion> conversionList = Collections.singletonList(conversion);
-        when(conversionRepository.findAllByDate(any(LocalDate.class))).thenReturn(conversionList);
+        List<Conversion> conversions = new ArrayList<>();
+        conversions.add(new Conversion("USD", "EUR", 0.85, 85.0));
+        conversions.add(new Conversion("USD", "GBP", 0.75, 75.0));
+        List<ConversionDTO> conversionDTOs = new ArrayList<>();
+        conversionDTOs.add(new ConversionDTO());
+        conversionDTOs.add(new ConversionDTO());
 
-        // Mock model mapper response
-        ConversionDTO conversionDTO = new ConversionDTO();
-        conversionDTO.setId(1);
-        conversionDTO.setRate(1.0);
-        conversionDTO.setAmount(10.0);
-        when(modelMapper.map(conversion, ConversionDTO.class)).thenReturn(conversionDTO);
+        when(conversionService.getConversionHistory(date)).thenReturn(conversions);
+        when(modelMapper.map(any(), eq(ConversionDTO.class))).thenReturn(new ConversionDTO());
 
-        // Mock pageable object
-        Pageable pageable = PageRequest.of(0, 10); // Create a pageable object
+        Pageable pageable = mock(Pageable.class);
+        when(pageable.getOffset()).thenReturn(0L);
+        when(pageable.getPageSize()).thenReturn(10);
 
-        // Call controller method with valid pageable object
-        Page<ConversionDTO> expectedPage = new PageImpl<>(Collections.singletonList(conversionDTO));
-        when(PaginationUtil.paginateList(any(Pageable.class), any(List.class))).thenReturn(expectedPage);
         ResponseEntity<Page<ConversionDTO>> response = conversionController.getConversionHistory(pageable, date);
 
-        // Verify the response
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().getContent().size());
+        assertEquals(conversionDTOs.size(), response.getBody().getContent().size());
+        verify(conversionService, times(1)).getConversionHistory(date);
+        verify(modelMapper, times(conversions.size())).map(any(), eq(ConversionDTO.class));
     }
+
+
 }

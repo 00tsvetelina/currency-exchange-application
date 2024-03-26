@@ -17,7 +17,6 @@ class ExchangeServiceTest {
 
     @Mock
     private HttpClient httpClientMock;
-
     @Mock
     private ExchangeService exchangeService;
 
