@@ -17,10 +17,8 @@ public class ExchangeControllerTest {
 
     @Mock
     ExchangeService exchangeService;
-
     @Mock
     Bucket bucket;
-
     @InjectMocks
     ExchangeController exchangeController;
 
