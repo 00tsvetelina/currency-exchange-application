@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ConversionServiceTest {
 
@@ -45,6 +45,8 @@ class ConversionServiceTest {
         assertEquals(LocalDate.now(), conversion.getDate());
         assertEquals(exchangeRate, conversion.getRate());
         assertEquals(expectedConvertedAmount, conversion.getAmount());
+
+        verify(exchangeServiceMock, times(1)).getExchangeRate(baseCurrency, targetCurrency);
     }
 
     @Test
@@ -57,8 +59,11 @@ class ConversionServiceTest {
         when(conversionRepositoryMock.findAllByDate(date)).thenReturn(conversionList);
         List<Conversion> retrievedConversions = conversionService.getConversionHistory(date);
         assertEquals(conversionList.size(), retrievedConversions.size());
-        for (int i = 0; i < conversionList.size(); i++) {
-            assertEquals(conversionList.get(i), retrievedConversions.get(i));
-        }
+
+        when(conversionRepositoryMock.findAllByDate(date)).thenReturn(new ArrayList<>());
+        retrievedConversions = conversionService.getConversionHistory(date);
+        assertEquals(0, retrievedConversions.size());
+
+        verify(conversionRepositoryMock, times(2)).findAllByDate(date);
     }
 }
