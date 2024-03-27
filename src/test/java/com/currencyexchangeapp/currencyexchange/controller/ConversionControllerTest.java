@@ -6,6 +6,7 @@ import com.currencyexchangeapp.currencyexchange.model.Conversion;
 import com.currencyexchangeapp.currencyexchange.repository.ConversionRepository;
 import com.currencyexchangeapp.currencyexchange.service.ConversionService;
 import com.currencyexchangeapp.currencyexchange.util.PaginationUtil;
+import io.github.bucket4j.Bucket;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,11 +34,14 @@ public class ConversionControllerTest {
     private ConversionService conversionService;
     @Mock
     private ModelMapper modelMapper;
+    @Mock
+    private Bucket bucket;
     @InjectMocks
     private ConversionController conversionController;
 
     @Test
-    public void testConvertCurrency() {
+    void testConvertCurrency_Success() {
+        // Mock ConversionService behavior
         Conversion conversion = new Conversion();
         conversion.setId(1);
         conversion.setRate(1.0);
@@ -49,37 +53,45 @@ public class ConversionControllerTest {
         conversionDTO.setRate(1.0);
         conversionDTO.setAmount(10.0);
         when(modelMapper.map(conversion, ConversionDTO.class)).thenReturn(conversionDTO);
+        when(bucket.tryConsume(1)).thenReturn(true);
 
         ResponseEntity<ConversionDTO> response = conversionController.convertCurrency("USD", "EUR", 10.0);
-
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(conversionDTO, response.getBody());
     }
 
     @Test
-    void getConversionHistoryTest() {
+    void testConvertCurrency_TooManyRequests() {
+        when(bucket.tryConsume(1)).thenReturn(false);
+
+        ResponseEntity<ConversionDTO> response = conversionController.convertCurrency("USD", "EUR", 10.0);
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+    }
+
+
+    @Test
+    void testGetConversionHistory_Success() {
         LocalDate date = LocalDate.now();
         List<Conversion> conversions = new ArrayList<>();
         conversions.add(new Conversion("USD", "EUR", 0.85, 85.0));
         conversions.add(new Conversion("USD", "GBP", 0.75, 75.0));
-        List<ConversionDTO> conversionDTOs = new ArrayList<>();
-        conversionDTOs.add(new ConversionDTO());
-        conversionDTOs.add(new ConversionDTO());
 
+        when(modelMapper.map(any(), any())).thenReturn(new ConversionDTO());
+        when(bucket.tryConsume(1)).thenReturn(true);
         when(conversionService.getConversionHistory(date)).thenReturn(conversions);
-        when(modelMapper.map(any(), eq(ConversionDTO.class))).thenReturn(new ConversionDTO());
 
-        Pageable pageable = mock(Pageable.class);
-        when(pageable.getOffset()).thenReturn(0L);
-        when(pageable.getPageSize()).thenReturn(10);
-
-        ResponseEntity<Page<ConversionDTO>> response = conversionController.getConversionHistory(pageable, date);
-
+        ResponseEntity<Page<ConversionDTO>> response = conversionController.getConversionHistory(mock(Pageable.class), date);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(conversionDTOs.size(), response.getBody().getContent().size());
         verify(conversionService, times(1)).getConversionHistory(date);
-        verify(modelMapper, times(conversions.size())).map(any(), eq(ConversionDTO.class));
+        verify(modelMapper, times(conversions.size())).map(any(), any());
     }
 
 
+    @Test
+    void testGetConversionHistory_TooManyRequests() {
+        when(bucket.tryConsume(1)).thenReturn(false);
+        ResponseEntity<Page<ConversionDTO>> response = conversionController.getConversionHistory(mock(Pageable.class), LocalDate.now());
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+    }
 }

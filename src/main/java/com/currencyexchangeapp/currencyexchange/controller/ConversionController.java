@@ -4,6 +4,7 @@ import com.currencyexchangeapp.currencyexchange.dto.ConversionDTO;
 import com.currencyexchangeapp.currencyexchange.model.Conversion;
 import com.currencyexchangeapp.currencyexchange.service.ConversionService;
 import com.currencyexchangeapp.currencyexchange.util.PaginationUtil;
+import io.github.bucket4j.Bucket;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -23,13 +24,18 @@ public class ConversionController {
 
     private final ConversionService conversionService;
     private final ModelMapper modelMapper;
+    private final Bucket bucket;
 
     @PostMapping("/currency")
     public ResponseEntity<ConversionDTO> convertCurrency (@RequestParam String base, String symbol, Double amount) {
         Conversion conversion = conversionService.convertCurrency(base, symbol, amount);
         ConversionDTO conversionDTO = modelMapper.map(conversion, ConversionDTO.class);
 
-        return new ResponseEntity<>(conversionDTO, HttpStatus.CREATED);
+        if (bucket.tryConsume(1)) {
+            return new ResponseEntity<>(conversionDTO, HttpStatus.CREATED);
+        }
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
     }
 
     @GetMapping("/conversionHistory")
@@ -41,6 +47,10 @@ public class ConversionController {
 
         Page<ConversionDTO> dtoPage = PaginationUtil.paginateList(pageable, conversionDTOList);
 
-        return ResponseEntity.ok(dtoPage);
+        if (bucket.tryConsume(1)) {
+            return ResponseEntity.ok(dtoPage);
+        }
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
     }
 }
